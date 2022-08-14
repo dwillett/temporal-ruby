@@ -246,6 +246,9 @@ module Temporal
       end
       history = Workflow::History.new(history_response.history.events)
       closed_event = history.events.first
+
+      puts("!!! history: (#{history_response})")
+
       case closed_event.type
       when 'WORKFLOW_EXECUTION_COMPLETED'
         payloads = closed_event.attributes.result

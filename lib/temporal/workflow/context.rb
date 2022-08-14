@@ -267,13 +267,18 @@ module Temporal
         fiber = Fiber.current
 
         handlers = futures.map do |future|
-          dispatcher.register_handler(future.target, Dispatcher::WILDCARD) do
+          handler_id = nil
+          handler = dispatcher.register_handler(future.target, Dispatcher::WILDCARD) do
+            puts("!!! resuming future fiber #{fiber} for (#{future}) via handler #{handler_id}")
             fiber.resume if future.finished?
           end
+          handler_id = handler.send(:id)
+          handler
         end
 
         stack_trace_tracker&.record
         begin
+          puts("!!! yielding for future (#{fiber})")
           Fiber.yield
         ensure
           stack_trace_tracker&.clear
@@ -292,11 +297,18 @@ module Temporal
         fiber = Fiber.current
 
         handler = dispatcher.register_handler(Dispatcher::TARGET_WILDCARD, Dispatcher::WILDCARD) do
-          fiber.resume if unblock_condition.call
+          puts("!!! checking wait_until fiber #{fiber} via handler #{handler.send(:id)}")
+          if unblock_condition.call
+            puts("!!! resuming wait_until fiber #{fiber}")
+            fiber.resume
+          else
+            puts("!!! wait_until condition is still false")
+          end
         end
 
         stack_trace_tracker&.record
         begin
+          puts("!!! yielding for wait_until (#{fiber})")
           Fiber.yield
         ensure
           stack_trace_tracker&.clear

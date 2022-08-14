@@ -6,7 +6,8 @@ describe ReproWorkflow do
     workflow_id = SecureRandom.uuid
     run_id = Temporal.start_workflow(
       ReproWorkflow,
-      options: { workflow_id: workflow_id }
+      # I'm having issues with the latest docker-compose not being able to terminate workflows easily
+      options: { workflow_id: workflow_id, timeouts: { run: 60 } }
     )
 
     Temporal.signal_workflow(ReproWorkflow, 'finish', workflow_id, run_id)

@@ -42,7 +42,7 @@ module Temporal
       WILDCARD = '*'.freeze
       TARGET_WILDCARD = '*'.freeze
 
-      EventStruct = Struct.new(:event_name, :handler)
+      EventStruct = Struct.new(:event_name, :handler, :id)
 
       def initialize
         @handlers = Hash.new { |hash, key| hash[key] = {} }
@@ -51,14 +51,18 @@ module Temporal
 
       def register_handler(target, event_name, &handler)
         @next_id += 1
-        handlers[target][@next_id] = EventStruct.new(event_name, handler)
+        puts("!!! registering handler #{@next_id} for '#{target}' '#{event_name}'")
+        handlers[target][@next_id] = EventStruct.new(event_name, handler, @next_id)
         RegistrationHandle.new(handlers[target], @next_id)
       end
 
       def dispatch(target, event_name, args = nil)
+        puts("!!! dispatching #{target} '#{event_name}'")
         handlers_for(target, event_name).each do |handler|
-          handler.call(*args)
+          puts("!!! calling handler #{handler.id} '#{handler.event_name}'")
+          handler.handler.call(*args)
         end
+        puts("!!! done dispatching #{target} '#{event_name}'")
       end
 
       private
@@ -70,7 +74,7 @@ module Temporal
           .merge(handlers[TARGET_WILDCARD]) { raise DuplicateIDError.new('Cannot resolve duplicate dispatcher handler IDs') }
           .select { |_, event_struct| match?(event_struct, event_name) }
           .sort
-          .map { |_, event_struct| event_struct.handler }
+          .map { |_, event_struct| event_struct }
       end
 
       def match?(event_struct, event_name)
