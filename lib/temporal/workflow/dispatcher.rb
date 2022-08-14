@@ -75,6 +75,18 @@ module Temporal
           .select { |_, event_struct| match?(event_struct, event_name) }
           .sort
           .map { |_, event_struct| event_struct }
+
+        # RUNS ALL THE HANDLERS AT THE END LIKE BEFORE
+        #handlers[target]
+        #  .select { |_, event_struct| match?(event_struct, event_name) }
+        #  .sort
+        #  .map { |_, event_struct| event_struct }
+        #  .concat(
+        #    handlers[TARGET_WILDCARD]
+        #    .select { |_, event_struct| match?(event_struct, event_name) }
+        #    .sort
+        #    .map { |_, event_struct| event_struct }
+        #  )
       end
 
       def match?(event_struct, event_name)
